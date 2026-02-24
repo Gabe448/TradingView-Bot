@@ -67,12 +67,18 @@ def webhook():
         
         logger.info(f"Received alert: {alert_message}")
         
-        # Check if we should ping the role (only during market hours)
-        should_ping = is_market_hours()
-        logger.info(f"Market hours active: {should_ping}")
+        # Check if we're in market hours
+        is_market_open = is_market_hours()
+        logger.info(f"Market hours active: {is_market_open}")
         
-        # Create Discord message with conditional role ping
+        # Block alerts outside market hours
+        if not is_market_open:
+            logger.info("Alert blocked - outside market hours")
+            return jsonify({"status": "blocked", "message": "Alert blocked - outside market hours (6:30 AM - 1:00 PM PT, weekdays only)"}), 200
+        
+        # Create Discord message with role ping (only runs during market hours now)
         discord_data = {
+            "content": "<@&1460609951021007008>",  # Always ping during market hours
             "embeds": [{
                 "title": "📊 TradingView Alert",
                 "description": str(alert_message),
@@ -83,10 +89,6 @@ def webhook():
                 }
             }]
         }
-        
-        # Only add role ping during market hours
-        if should_ping:
-            discord_data["content"] = "<@&1460609951021007008>"
         
         # Send to Discord
         response = requests.post(
