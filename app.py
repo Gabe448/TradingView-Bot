@@ -20,17 +20,17 @@ logger.info(f"PORT environment variable: {os.environ.get('PORT', 'NOT SET')}")
 logger.info(f"Discord webhook configured: {'Yes' if DISCORD_WEBHOOK_URL else 'No'}")
 
 def is_market_hours():
-    """Check if current time is during market hours (6:30 AM - 1:00 PM PT, weekdays)"""
-    pacific = pytz.timezone('America/Los_Angeles')
-    now = datetime.now(pacific)
+    """Check if current time is during market hours (9:15 AM - 3:55 PM ET, weekdays)"""
+    eastern = pytz.timezone('America/New_York')
+    now = datetime.now(eastern)
     
     # Check if it's a weekday (Monday=0, Sunday=6)
     if now.weekday() >= 5:  # Saturday or Sunday
         return False
     
-    # Check if time is between 6:30 AM and 1:00 PM
-    market_start = now.replace(hour=6, minute=30, second=0, microsecond=0)
-    market_end = now.replace(hour=13, minute=0, second=0, microsecond=0)
+    # Check if time is between 9:15 AM and 3:55 PM ET
+    market_start = now.replace(hour=9, minute=15, second=0, microsecond=0)
+    market_end = now.replace(hour=15, minute=55, second=0, microsecond=0)
     
     return market_start <= now <= market_end
 
@@ -74,7 +74,7 @@ def webhook():
         # Block alerts outside market hours
         if not is_market_open:
             logger.info("Alert blocked - outside market hours")
-            return jsonify({"status": "blocked", "message": "Alert blocked - outside market hours (6:30 AM - 1:00 PM PT, weekdays only)"}), 200
+            return jsonify({"status": "blocked", "message": "Alert blocked - outside market hours (9:15 AM - 3:55 PM ET, weekdays only)"}), 200
         
         # Create Discord message with role ping (only runs during market hours now)
         discord_data = {
